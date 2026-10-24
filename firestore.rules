@@ -1,0 +1,104 @@
+rules_version = '2';
+
+// Security Rules do KanbaLeiando (secao 15.1).
+// - Nega por padrao.
+// - Permite apenas LEITURA dos caminhos de conteudo do quadro.
+// - Proibe TODA escrita direta do cliente: escrita passa pela API Python.
+// - Membros exigem perfil ativo e vinculo; visitantes publicos exigem claim
+//   kind=public_view com boardId e shareVersion vigentes.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Funcoes auxiliares ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function activeProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isMember(boardId) {
+      return activeProfile()
+        && exists(/databases/$(database)/documents/boardSecurity/$(boardId)/members/$(request.auth.uid));
+    }
+
+    function isPublicVisitorFor(boardId) {
+      return isSignedIn()
+        && request.auth.token.kind == 'public_view'
+        && request.auth.token.boardId == boardId
+        && boardEnabledPublicly(boardId)
+        && request.auth.token.shareVersion == publicShareVersion(boardId);
+    }
+
+    function boardEnabledPublicly(boardId) {
+      return exists(/databases/$(database)/documents/boardSecurity/$(boardId))
+        && get(/databases/$(database)/documents/boardSecurity/$(boardId)).data.publicEnabled == true
+        && get(/databases/$(database)/documents/boardSecurity/$(boardId)).data.status != 'deleting';
+    }
+
+    function publicShareVersion(boardId) {
+      return get(/databases/$(database)/documents/boardSecurity/$(boardId)).data.publicShareVersion;
+    }
+
+    function canReadBoard(boardId) {
+      return isMember(boardId) || isPublicVisitorFor(boardId);
+    }
+
+    // ---- Perfil do proprio usuario (somente leitura do proprio documento) ----
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+
+      // Projecao pessoal de navegacao.
+      match /boardRefs/{boardId} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+
+    // ---- Conteudo do quadro (leitura para membros e leitores publicos) ----
+    match /boards/{boardId} {
+      allow read: if canReadBoard(boardId);
+      allow write: if false;
+
+      match /columns/{columnId} {
+        allow read: if canReadBoard(boardId);
+        allow write: if false;
+      }
+
+      match /cards/{cardId} {
+        allow read: if canReadBoard(boardId);
+        allow write: if false;
+
+        // Campos e anexos: carregados ao abrir o detalhe.
+        match /fields/{fieldId} {
+          allow read: if canReadBoard(boardId);
+          allow write: if false;
+        }
+        match /attachments/{attachmentId} {
+          allow read: if canReadBoard(boardId);
+          allow write: if false;
+        }
+      }
+    }
+
+    // ---- Dados privados: somente backend (Admin SDK ignora estas regras) ----
+    match /boardSecurity/{document=**} { allow read, write: if false; }
+    match /boardTemplates/{document=**} { allow read, write: if false; }
+    match /boardAudit/{document=**} { allow read, write: if false; }
+    match /operations/{document=**} { allow read, write: if false; }
+    match /uploadSessions/{document=**} { allow read, write: if false; }
+    match /adminSessions/{document=**} { allow read, write: if false; }
+    match /rateLimits/{document=**} { allow read, write: if false; }
+    match /idempotency/{document=**} { allow read, write: if false; }
+    match /emailJobs/{document=**} { allow read, write: if false; }
+
+    // Nega qualquer outro caminho.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

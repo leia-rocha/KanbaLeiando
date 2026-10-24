@@ -1,0 +1,56 @@
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+service-account*.json
+firebase-service-account*.json
+gcp-key*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build / Docker
+dist/
+build/
+*.log
+
+# Emuladores Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+emulator-data/
+
+# IDE / SO
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

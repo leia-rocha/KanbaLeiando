@@ -1,0 +1,34 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "columnId", "order": "ASCENDING" },
+        { "fieldPath": "sortKey", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
+      "fields": [{ "fieldPath": "occurredAt", "order": "DESCENDING" }]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "fields",
+      "fieldPath": "value",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "cards",
+      "fieldPath": "visibleFieldsSnapshot",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "events",
+      "fieldPath": "changedFields",
+      "indexes": []
+    }
+  ]
+}

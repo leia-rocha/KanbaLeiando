@@ -1,0 +1,32 @@
+# Segredos nunca entram na imagem.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+service-account*.json
+gcp-key*.json
+
+# Artefatos locais.
+**/node_modules
+**/.venv
+**/venv
+**/__pycache__
+**/dist
+**/build
+**/.vite
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/htmlcov
+.git
+.github
+emulator-data
+firebase-debug.log
+firestore-debug.log
+test-results
+playwright-report
+docs
+tests
+backend/tests
+e2e
